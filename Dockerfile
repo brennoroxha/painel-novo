@@ -11,8 +11,8 @@ RUN npm run build
 FROM node:20-slim
 WORKDIR /app/backend
 
-# Install OpenSSL for Prisma compatibility
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Install libssl1.1 for Prisma query engine compatibility
+RUN apt-get update && apt-get install -y libssl1.1 openssl && rm -rf /var/lib/apt/lists/*
 
 COPY backend/package*.json ./
 COPY --from=build /app/backend/dist ./dist
