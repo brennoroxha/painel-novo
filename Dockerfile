@@ -3,6 +3,7 @@ FROM node:20-slim AS build
 WORKDIR /app
 COPY . .
 RUN npm install --workspaces
+RUN npx prisma generate
 RUN npm run build --workspace=backend
 
 # Runtime backend
