@@ -1,4 +1,5 @@
 import * as jwt from 'jsonwebtoken';
+import { SignOptions } from 'jsonwebtoken';
 
 export interface JWTPayload {
   userId: string;
@@ -16,22 +17,22 @@ export interface RefreshTokenPayload {
 export function generateAccessToken(
   userId: string,
   secret: string,
-  expiresIn: string = '1h'
+  expiresIn: string | number = '1h'
 ): string {
   const payload: JWTPayload = { userId };
-  return jwt.sign(payload, secret, { expiresIn });
+  return jwt.sign(payload, secret, { expiresIn } as SignOptions);
 }
 
 export function generateRefreshToken(
   userId: string,
   secret: string,
-  expiresIn: string = '24h'
+  expiresIn: string | number = '24h'
 ): string {
   const payload: RefreshTokenPayload = {
     userId,
     type: 'refresh',
   };
-  return jwt.sign(payload, secret, { expiresIn });
+  return jwt.sign(payload, secret, { expiresIn } as SignOptions);
 }
 
 export function verifyAccessToken(token: string, secret: string): JWTPayload {
