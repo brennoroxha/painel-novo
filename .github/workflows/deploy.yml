@@ -5,47 +5,17 @@ on:
     branches: [main]
 
 jobs:
-  build-and-push:
+  notify:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check environment
+      - name: Code pushed successfully
         run: |
-          echo "Docker version:"
-          docker --version
-          echo "Dockerfile:"
-          ls -lah Dockerfile
-          echo "First 30 lines of Dockerfile:"
-          head -30 Dockerfile
-
-      - name: Build Docker image
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          echo "Building: $DOCKER_USER/painel-novo:latest"
-          docker build -t $DOCKER_USER/painel-novo:latest . 2>&1 | tee docker-build.log
-          EXIT_CODE=${PIPESTATUS[0]}
-          echo "Exit code: $EXIT_CODE"
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "DOCKER BUILD FAILED - Last 50 lines:"
-            tail -50 docker-build.log
-            exit $EXIT_CODE
-          fi
-          echo "✓ Docker image built successfully"
-
-      - name: Login to Docker Hub
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-
-      - name: Push to Docker Hub
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-        run: |
-          docker push $DOCKER_USER/painel-novo:latest
-          echo "✓ Image pushed to Docker Hub"
+          echo "✓ Código enviado para main"
+          echo "✓ EasyPanel vai detectar e fazer deploy automaticamente"
+          echo ""
+          echo "Se EasyPanel não fizer deploy automaticamente:"
+          echo "1. Entre no painel EasyPanel"
+          echo "2. Vá em Services > painel-novo"
+          echo "3. Clique em 'Deploy' ou 'Redeploy'"

@@ -2,19 +2,27 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Instalar libssl1.1 para Prisma
 RUN apt-get update && apt-get install -y libssl1.1 && rm -rf /var/lib/apt/lists/*
 
-# Simples - apenas copiar e instalar o mínimo
-COPY package.json package-lock.json ./
-COPY backend/package.json ./backend/package.json
-
-RUN npm install
-
+# Copiar projeto inteiro
 COPY . .
 
-WORKDIR /app/backend
-RUN npx prisma generate 2>/dev/null || true
-RUN npm run build || echo "Build pode ter falhado, continuando..."
+# Limpar node_modules local (pode causar problemas)
+RUN rm -rf node_modules backend/node_modules frontend/node_modules
 
+# Instalar dependências
+RUN npm install --workspaces --legacy-peer-deps
+
+# Gerar Prisma types
+WORKDIR /app/backend
+RUN npx prisma generate
+
+# Build do backend
+WORKDIR /app
+RUN npm run build --workspace=backend
+
+# Rodar
+WORKDIR /app/backend
 EXPOSE 3001
 CMD ["node", "dist/server.js"]
