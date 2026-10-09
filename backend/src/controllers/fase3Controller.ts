@@ -32,9 +32,13 @@ export class Fase3Controller {
       // Analyze IPs
       const results = await this.fase3Service.analyzeIPs(ips);
 
-      // Save results
+      // Save results and emit WebSocket events
+      const io = req.app.locals.io;
       for (const result of results) {
         await this.fase3Service.saveFase3Log(campaignId, result);
+        if (io) {
+          io.to(`campaign:${campaignId}`).emit('fase3:verdict_received', result);
+        }
       }
 
       // Audit log

@@ -25,6 +25,12 @@ export class DomainController {
       // Add domain (3-step process)
       const result = await this.cloudflareService.addDomain(campaignId, domain);
 
+      // Emit WebSocket event
+      const io = req.app.locals.io;
+      if (io) {
+        io.to(`campaign:${campaignId}`).emit('domain:added', result);
+      }
+
       res.status(201).json({ data: result });
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
