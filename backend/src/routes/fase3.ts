@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { Fase3Controller } from '../controllers/fase3Controller';
 import { authMiddleware } from '../middleware/authMiddleware';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
 const controller = new Fase3Controller(prisma);
 const router = Router({ mergeParams: true });
 

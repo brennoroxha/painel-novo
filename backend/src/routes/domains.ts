@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { DomainController } from '../controllers/domainsController';
 import { authMiddleware } from '../middleware/authMiddleware';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
 const controller = new DomainController(prisma);
 const router = Router({ mergeParams: true });
 

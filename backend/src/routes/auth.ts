@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/authController';
 import { authMiddleware } from '../middleware/authMiddleware';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
 const controller = new AuthController(prisma);
 const router = Router();
 
