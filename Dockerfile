@@ -12,10 +12,10 @@ FROM node:20-alpine
 WORKDIR /app/backend
 RUN apk add --no-cache openssl-1.1
 COPY backend/package*.json ./
-RUN npm install --production
 COPY --from=build /app/backend/dist ./dist
 COPY --from=build /app/backend/prisma ./prisma
 COPY --from=build /app/backend/.prisma ./.prisma
+RUN npm install --production
 RUN npx prisma generate
 EXPOSE 3001
 CMD ["node", "dist/server.js"]
