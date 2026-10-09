@@ -2,8 +2,12 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Instalar libssl1.1 para Prisma
-RUN apt-get update && apt-get install -y libssl1.1 && rm -rf /var/lib/apt/lists/*
+# Instalar dependências de sistema (incluindo OpenSSL)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    openssl \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copiar projeto inteiro
 COPY . .
