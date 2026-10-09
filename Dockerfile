@@ -13,7 +13,7 @@ COPY package.json package-lock.json ./
 COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
 
-# Install dependencies
+# Install all dependencies
 RUN npm ci --workspaces
 
 # Copy source code
@@ -33,27 +33,17 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install only runtime dependencies
-RUN apt-get update && apt-get install -y libssl1.1 openssl && rm -rf /var/lib/apt/lists/*
+# Install only runtime dependencies for Prisma
+RUN apt-get update && apt-get install -y libssl1.1 && rm -rf /var/lib/apt/lists/*
 
-# Copy package files for runtime
-COPY package.json package-lock.json ./
-COPY backend/package.json ./backend/
-COPY frontend/package.json ./frontend/
-
-# Install runtime dependencies only
-RUN npm ci --workspaces --production=true --omit=dev
-
-# Copy built application from builder
+# Copy production node_modules and built code from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/backend/node_modules ./backend/node_modules
 COPY --from=builder /app/backend/dist ./backend/dist
 COPY --from=builder /app/backend/prisma ./backend/prisma
+COPY --from=builder /app/package.json ./package.json
 
-# Set runtime directory
 WORKDIR /app/backend
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/api/auth/verify', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
 EXPOSE 3001
 CMD ["node", "dist/server.js"]
