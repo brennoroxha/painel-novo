@@ -3,67 +3,47 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: painel_postgres
     environment:
-      POSTGRES_DB: painel_campanhas
-      POSTGRES_USER: painel_user
-      POSTGRES_PASSWORD: painel_password_dev
+      POSTGRES_DB: ${DB_NAME:-painel_campanhas}
+      POSTGRES_USER: ${DB_USER:-painel_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-painel_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U painel_user"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - painel-network
 
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-    container_name: painel_backend
-    depends_on:
-      postgres:
-        condition: service_healthy
+    build: ./backend
     environment:
-      DATABASE_URL: postgresql://painel_user:painel_password_dev@postgres:5432/painel_campanhas
-      JWT_SECRET: your-secret-key-change-in-production
-      CLOUDFLARE_ACCOUNT_ID: 15e3474e643a95410e55957b65b482d0
-      CLOUDFLARE_API_TOKEN: your-api-token
-      CLOUDFLARE_ZONE_ID_FILTRAPRO: your-zone-id
-      FASE3_API_KEY: d24191ed291a92838f584dff4082c13f4f0d368614786f825bb7fcfcba8577e9
+      DATABASE_URL: postgresql://${DB_USER:-painel_user}:${DB_PASSWORD:-painel_password}@postgres:5432/${DB_NAME:-painel_campanhas}
+      JWT_SECRET: ${JWT_SECRET:-change-in-production}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+      CLOUDFLARE_ZONE_ID_FILTRAPRO: ${CLOUDFLARE_ZONE_ID_FILTRAPRO}
+      FASE3_API_KEY: ${FASE3_API_KEY}
       FASE3_SERVER: 177.153.69.138
       FASE3_PORT: 3001
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3001
     ports:
       - "3001:3001"
-    networks:
-      - painel-network
-    volumes:
-      - ./backend/src:/app/src
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-    container_name: painel_frontend
-    environment:
-      VITE_API_URL: http://localhost:3001
-      VITE_WS_URL: ws://localhost:3001
+    build: ./frontend
     ports:
-      - "80:80"
+      - "3000:3000"
     depends_on:
       - backend
-    networks:
-      - painel-network
+    environment:
+      VITE_API_URL: http://backend:3001
+      VITE_WS_URL: ws://backend:3001
 
 volumes:
   postgres_data:
-
-networks:
-  painel-network:
-    driver: bridge
