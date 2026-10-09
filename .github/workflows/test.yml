@@ -37,6 +37,11 @@ jobs:
       - name: Install dependencies
         run: npm install --workspaces
 
+      - name: Generate Prisma types
+        run: cd backend && npx prisma generate
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/painel_campanhas_test
+
       - name: Run backend tests
         run: npm run test --workspace=backend
         env:
