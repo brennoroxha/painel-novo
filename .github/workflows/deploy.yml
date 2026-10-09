@@ -23,8 +23,13 @@ jobs:
       - name: Build Docker image
         run: |
           echo "Starting Docker build for ${{ secrets.DOCKER_USERNAME }}/painel-novo:latest"
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/painel-novo:latest . 2>&1
-          echo "Docker build completed"
+          docker build --progress=plain -t ${{ secrets.DOCKER_USERNAME }}/painel-novo:latest .
+          BUILD_STATUS=$?
+          echo "Docker build completed with status: $BUILD_STATUS"
+          if [ $BUILD_STATUS -ne 0 ]; then
+            echo "Docker build FAILED with status $BUILD_STATUS"
+            exit $BUILD_STATUS
+          fi
 
       - name: Login and push to Docker Hub
         run: |
