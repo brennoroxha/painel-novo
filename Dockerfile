@@ -14,5 +14,6 @@ COPY backend/package*.json ./
 RUN npm install --production
 COPY --from=build /app/backend/dist ./dist
 COPY --from=build /app/backend/prisma ./prisma
+RUN npx prisma generate
 EXPOSE 3001
 CMD ["node", "dist/server.js"]
