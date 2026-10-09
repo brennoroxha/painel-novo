@@ -11,24 +11,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Debug info
+      - name: Check secrets and environment
         run: |
-          echo "Checking Docker..."
+          echo "Docker version:"
           docker --version
-          echo "Checking Node..."
-          node --version
-          echo "Dockerfile exists:"
-          ls -lah Dockerfile
+          echo "Checking secrets..."
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+            echo "❌ ERRO: DOCKER_USERNAME não está configurado!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
+            echo "❌ ERRO: DOCKER_PASSWORD não está configurado!"
+            exit 1
+          fi
+          echo "✓ DOCKER_USERNAME está configurado"
+          echo "✓ DOCKER_PASSWORD está configurado"
+          echo "Image will be: ${{ secrets.DOCKER_USERNAME }}/painel-novo:latest"
 
       - name: Build Docker image
         run: |
-          echo "Starting Docker build for ${{ secrets.DOCKER_USERNAME }}/painel-novo:latest"
-          docker build --progress=plain -t ${{ secrets.DOCKER_USERNAME }}/painel-novo:latest .
-          BUILD_STATUS=$?
-          echo "Docker build completed with status: $BUILD_STATUS"
-          if [ $BUILD_STATUS -ne 0 ]; then
-            echo "Docker build FAILED with status $BUILD_STATUS"
-            exit $BUILD_STATUS
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/painel-novo:latest .
+          if [ $? -eq 0 ]; then
+            echo "✓ Docker build SUCCESS"
+          else
+            echo "❌ Docker build FAILED"
+            exit 1
           fi
 
       - name: Login and push to Docker Hub
