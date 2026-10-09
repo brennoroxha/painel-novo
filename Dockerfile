@@ -3,14 +3,14 @@ FROM node:20-alpine AS build
 WORKDIR /app
 COPY . .
 WORKDIR /app/backend
-RUN npm ci
+RUN npm install
 RUN npm run build
 
 # Runtime backend
 FROM node:20-alpine
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --production
+RUN npm install --production
 COPY --from=build /app/backend/dist ./dist
 COPY --from=build /app/prisma ../prisma
 EXPOSE 3001
