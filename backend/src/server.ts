@@ -35,7 +35,7 @@ app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`📊 API ready at http://localhost:${PORT}/api`);
   console.log(`🔧 Prisma query engine (libssl1.1) ready`);
