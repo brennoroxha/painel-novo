@@ -3,11 +3,13 @@ import MainLayout from '../components/Layout/MainLayout';
 import KPICards from '../components/Dashboard/KPICards';
 import StatsChart from '../components/Dashboard/StatsChart';
 import api from '../services/api';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ activeCampaigns: 0, analyzedIps: 0, blockedIps: 0, avgRiskScore: 0 });
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { on, off } = useWebSocket();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -37,6 +39,18 @@ export default function Dashboard() {
 
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const handleStatsUpdate = (data: any) => {
+      setStats(prev => ({ ...prev, ...data }));
+    };
+
+    on('campaign:stats:updated', handleStatsUpdate);
+
+    return () => {
+      off('campaign:stats:updated', handleStatsUpdate);
+    };
+  }, [on, off]);
 
   return (
     <MainLayout>
