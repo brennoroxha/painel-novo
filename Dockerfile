@@ -13,7 +13,6 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 COPY --from=build /app/backend/dist ./dist
 COPY --from=build /app/backend/prisma ./prisma
-COPY --from=build /app/backend/.prisma ./.prisma
 RUN npm install --production
 RUN npx prisma generate
 EXPOSE 3001
