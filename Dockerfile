@@ -4,6 +4,7 @@ WORKDIR /app
 COPY . .
 WORKDIR /app/backend
 RUN npm install
+RUN npx prisma generate
 RUN npm run build
 
 # Runtime backend
