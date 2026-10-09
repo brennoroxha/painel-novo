@@ -11,36 +11,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check secrets and environment
+      - name: Check environment
         run: |
           echo "Docker version:"
           docker --version
-          echo "Checking secrets..."
-          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
-            echo "❌ ERRO: DOCKER_USERNAME não está configurado!"
-            exit 1
-          fi
-          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
-            echo "❌ ERRO: DOCKER_PASSWORD não está configurado!"
-            exit 1
-          fi
-          echo "✓ DOCKER_USERNAME está configurado"
-          echo "✓ DOCKER_PASSWORD está configurado"
-          echo "Image will be: ${{ secrets.DOCKER_USERNAME }}/painel-novo:latest"
+          echo "Dockerfile:"
+          ls -lah Dockerfile
+          echo "First 30 lines of Dockerfile:"
+          head -30 Dockerfile
 
       - name: Build Docker image
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          echo "Building image as: $DOCKER_USER/painel-novo:latest"
-          docker build -t $DOCKER_USER/painel-novo:latest .
-          echo "Build exit code: $?"
+          echo "Building: $DOCKER_USER/painel-novo:latest"
+          docker build -t $DOCKER_USER/painel-novo:latest . 2>&1 | tee docker-build.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "Exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "DOCKER BUILD FAILED - Last 50 lines:"
+            tail -50 docker-build.log
+            exit $EXIT_CODE
+          fi
+          echo "✓ Docker image built successfully"
 
-      - name: Login and push to Docker Hub
+      - name: Login to Docker Hub
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+      - name: Push to Docker Hub
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+        run: |
           docker push $DOCKER_USER/painel-novo:latest
+          echo "✓ Image pushed to Docker Hub"
