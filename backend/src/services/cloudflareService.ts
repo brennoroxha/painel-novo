@@ -55,8 +55,8 @@ export class CloudflareService {
 
       const customHostnameId = response.data.result.id;
 
-      // Wait for DNS propagation (45 seconds in production, 1 second in tests)
-      const sleepTime = process.env.NODE_ENV === 'test' ? 1000 : 45000;
+      // Wait for DNS propagation (45 seconds in production, 0ms in tests)
+      const sleepTime = process.env.NODE_ENV === 'test' ? 0 : 45000;
       await this.sleep(sleepTime);
 
       return customHostnameId;
