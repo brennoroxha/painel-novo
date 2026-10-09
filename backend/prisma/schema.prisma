@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  passwordHash String
+  name      String
+  role      Role     @default(OPERATOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaigns Campaign[]
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  description String?
+  status      Status   @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  domains      CampaignDomain[]
+  stats        CampaignStats[]
+  fase3Logs    Fase3Log[]
+  auditLogs    AuditLog[]
+  campaignLinks CampaignLink[]
+
+  @@map("campaigns")
+}
+
+enum Status {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+model CampaignDomain {
+  id                 String   @id @default(cuid())
+  campaignId         String
+  campaign           Campaign @relation(fields: [campaignId], references: [id])
+  domain             String   @unique
+  zoneId             String
+  customHostnameId   String?
+  status             DomainStatus @default(PENDING)
+  addedAt            DateTime @default(now())
+
+  @@map("campaign_domains")
+}
+
+enum DomainStatus {
+  PENDING
+  ACTIVE
+  FAILED
+}
+
+model CampaignStats {
+  id           String   @id @default(cuid())
+  campaignId   String
+  campaign     Campaign @relation(fields: [campaignId], references: [id])
+  date         DateTime
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  conversions  Int      @default(0)
+  blockedIps   Int      @default(0)
+  analyzedIps  Int      @default(0)
+  avgRiskScore Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@map("campaign_stats")
+}
+
+model Fase3Log {
+  id                String   @id @default(cuid())
+  campaignId        String?
+  campaign          Campaign? @relation(fields: [campaignId], references: [id])
+  ip                String
+  canvasFingerprint String?
+  webglFingerprint  String?
+  userAgent         String?
+  deviceType        String?
+  country           String?
+  isHeadless        Boolean  @default(false)
+  verdict           Verdict  @default(UNKNOWN)
+  riskScore         Int?     @db.SmallInt
+  componentScores   Json?
+  blindagemFlags    Json?
+  encryptedAt       DateTime @default(now())
+  analyzedAt        DateTime @default(now())
+
+  @@map("fase3_logs")
+}
+
+enum Verdict {
+  ALLOW
+  BLOCK
+  CHALLENGE
+  UNKNOWN
+}
+
+model CampaignLink {
+  id        String   @id @default(cuid())
+  campaignId String
+  campaign  Campaign @relation(fields: [campaignId], references: [id])
+  shortCode String   @unique
+  fullUrl   String
+  clicks    Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("campaign_links")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  action       String
+  resourceType String
+  resourceId   String?
+  details      Json?
+  timestamp    DateTime @default(now())
+
+  campaign Campaign? @relation(fields: [resourceId], references: [id])
+
+  @@map("audit_logs")
+}
