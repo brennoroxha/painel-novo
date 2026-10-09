@@ -1,4 +1,5 @@
 import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken } from '../src/utils/jwt';
+import { authMiddleware } from '../src/middleware/authMiddleware';
 
 describe('JWT Utils', () => {
   const userId = 'test-user-123';
@@ -56,5 +57,69 @@ describe('JWT Utils', () => {
       const token = generateRefreshToken(userId, secret);
       expect(() => verifyRefreshToken(token, 'wrong-secret')).toThrow();
     });
+  });
+});
+
+describe('Auth Middleware', () => {
+  const secret = 'test-secret-key';
+  const userId = 'test-user-123';
+
+  it('should reject request without token', () => {
+    const req = { headers: {} } as any;
+    const statusMock = jest.fn().mockReturnThis();
+    const res = { status: statusMock, json: jest.fn() } as any;
+    const next = jest.fn();
+
+    authMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+  });
+
+  it('should accept valid token and set user on request', () => {
+    const token = generateAccessToken(userId, secret);
+    const req = { headers: { authorization: `Bearer ${token}` } } as any;
+    const res = {} as any;
+    const next = jest.fn();
+
+    // Mock process.env.JWT_SECRET
+    const originalSecret = process.env.JWT_SECRET;
+    process.env.JWT_SECRET = secret;
+
+    authMiddleware(req, res, next);
+
+    expect(req.user).toBeDefined();
+    expect(req.user.userId).toBe(userId);
+    expect(next).toHaveBeenCalled();
+
+    process.env.JWT_SECRET = originalSecret;
+  });
+
+  it('should reject invalid token', () => {
+    const req = { headers: { authorization: 'Bearer invalid.token.here' } } as any;
+    const statusMock = jest.fn().mockReturnThis();
+    const res = { status: statusMock, json: jest.fn() } as any;
+    const next = jest.fn();
+
+    const originalSecret = process.env.JWT_SECRET;
+    process.env.JWT_SECRET = secret;
+
+    authMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
+
+    process.env.JWT_SECRET = originalSecret;
+  });
+
+  it('should reject request with malformed authorization header', () => {
+    const req = { headers: { authorization: 'InvalidFormat token' } } as any;
+    const statusMock = jest.fn().mockReturnThis();
+    const res = { status: statusMock, json: jest.fn() } as any;
+    const next = jest.fn();
+
+    authMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
   });
 });
