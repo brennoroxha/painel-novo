@@ -34,7 +34,7 @@ app.use('/api/campaigns/:campaignId/fase3', fase3Routes);
 app.use(errorHandler);
 
 // Start server
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`📊 API ready at http://localhost:${PORT}/api`);
