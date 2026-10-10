@@ -15,7 +15,7 @@ import fase3Routes from './routes/fase3';
 const app = express();
 const httpServer = http.createServer(app);
 
-// Middleware
+// System Middleware
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
@@ -25,26 +25,24 @@ app.use(express.json());
 const io = initializeSocket(httpServer);
 app.locals.io = io;
 
-// ✅ Serve static files from frontend dist
-const frontendDistPath = '/app/frontend/dist';
-app.use(express.static(frontendDistPath));
-
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/campaigns', authMiddleware, campaignRoutes);
 app.use('/api/campaigns/:campaignId/domains', domainRoutes);
 app.use('/api/campaigns/:campaignId/fase3', fase3Routes);
 
-// ✅ SPA fallback - serve index.html for non-API routes
+// Frontend Static Files & SPA Fallback
+const frontendDistPath = '/app/frontend/dist';
+
+// Serve static assets (JS, CSS, images, etc)
+app.use(express.static(frontendDistPath));
+
+// ✅ SPA Fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api/')) {
-    res.sendFile(path.join(frontendDistPath, 'index.html'));
-  } else {
-    res.status(404).json({ error: 'API endpoint not found' });
-  }
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 
-// Error handler
+// Error handler (must be last)
 app.use(errorHandler);
 
 // Start server
