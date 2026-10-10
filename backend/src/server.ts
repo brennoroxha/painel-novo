@@ -26,7 +26,7 @@ const io = initializeSocket(httpServer);
 app.locals.io = io;
 
 // ✅ Serve static files from frontend dist
-const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+const frontendDistPath = '/app/frontend/dist';
 app.use(express.static(frontendDistPath));
 
 // Routes
