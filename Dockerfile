@@ -22,6 +22,10 @@ RUN npm install --workspaces --legacy-peer-deps
 WORKDIR /app/backend
 RUN npx prisma generate
 
+# Build do frontend
+WORKDIR /app
+RUN npm run build --workspace=frontend
+
 # Build do backend
 WORKDIR /app
 RUN npm run build --workspace=backend

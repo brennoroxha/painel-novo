@@ -3,6 +3,7 @@ import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
 import { initializeSocket } from './websocket/socketHandler';
 import { errorHandler } from './middleware/errorHandler';
 import { authMiddleware } from './middleware/authMiddleware';
@@ -24,11 +25,24 @@ app.use(express.json());
 const io = initializeSocket(httpServer);
 app.locals.io = io;
 
+// ✅ Serve static files from frontend dist
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/campaigns', authMiddleware, campaignRoutes);
 app.use('/api/campaigns/:campaignId/domains', domainRoutes);
 app.use('/api/campaigns/:campaignId/fase3', fase3Routes);
+
+// ✅ SPA fallback - serve index.html for non-API routes
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  } else {
+    res.status(404).json({ error: 'API endpoint not found' });
+  }
+});
 
 // Error handler
 app.use(errorHandler);
